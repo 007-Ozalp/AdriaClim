@@ -1,0 +1,45 @@
+TODO Ozlem: revise the module names, to have all camel-case (e.g. rename adriaClimIndUtils_aggregates.py to adriaClimIndUtilsAggregates.py).
+
+
+TODO Ozlem: fix the functions acGenerate2DSeasonalSummer and acGenerate2DSeasonalWinter in adriaClimIndUtilsAggregates.py. These function should return a file with 33 frames (one per year), the first with the summer mean, the second with the winter mean.
+
+
+TODO Ozlem: remove the function acGenerate1DFixDim in adriaClimIndUtilsAggregates.py. Only acGenerate1DFixDimCSV should remain, saving only in csv, which should be the only format used for time series.
+
+
+TODO Ozlem: geocat plot for mean SST.
+
+
+TODO Ozlem: generalization of the structure of the netcdf by means of a specification class, e.g.:
+
+     class acNcFileSpec:                                                                                      
+       def __init__(self, ncFileName="", xVarName="", yVarName="", zVarName="", tVarName=""):                 
+         self.ncFileName = ncFileName                                                                         
+         self.xVarName = xVarName
+         self.yVarName = yVarName
+         self.zVarName = zVarName
+         self.tVarName = tVarName
+
+     and the methods of the different modules should use this class instead of nc file names or xarray instances. E.g.
+   
+     def acClipDataOnRegion(inputNcFileSpec, areaPerimeter, outputNcFileSpec): # inputNcFileSpec and outputNcFileSpec are instances of acNcFileSpec
+       ...
+
+     def acGenerate2DAnnualMeanMaps(inputNc, annualMapsNcFile): # inputNc should be an instance of acNcFileSpec
+       ...
+
+
+TODO Ozlem: have a look on how matlplotlib and geocat can be integrated in web frameworks such as: dash, web2py, django.
+
+
+TODO Lorenzo: fix the function computeAnnualTheilSenFitFromDailyFile in adriaClimIndUtilsStats.py, to remove any explicit reference to the DATE field. 
+
+
+TODO Lorenzo: When the class acNcFileSpec is ready, the methods of adriaClimIndUtilsStats should use it.
+
+
+TODO Lorenzo: work on the time series plot.
+
+
+
+
