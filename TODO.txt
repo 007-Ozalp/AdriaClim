@@ -32,13 +32,10 @@ TODO Ozlem: generalization of the structure of the netcdf by means of a specific
 TODO Ozlem: have a look on how matlplotlib and geocat can be integrated in web frameworks such as: dash, web2py, django.
 
 
-TODO Lorenzo: fix the function computeAnnualTheilSenFitFromDailyFile in adriaClimIndUtilsStats.py, to remove any explicit reference to the DATE field. 
-
-
 TODO Lorenzo: When the class acNcFileSpec is ready, the methods of adriaClimIndUtilsStats should use it.
 
 
-TODO Lorenzo: work on the time series plot.
+TODO Lorenzo: move the SST timeseries plot to adriaClimIndUtilsPlots .
 
 
 
