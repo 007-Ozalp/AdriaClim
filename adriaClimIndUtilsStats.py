@@ -22,7 +22,8 @@ def computeAnnualTheilSenFitFromDailyFile(dailyCsvFile):
   # converting object to date
   ds.iloc[:,dateCol] = pd.to_datetime(ds.iloc[:,dateCol])
   valColName = ds.iloc[:,valCol].name
-  dsy = ds.groupby(ds.DATE.dt.year)[valColName].agg("mean")
+  dsDateCol = ds.iloc[:,dateCol]
+  dsy = ds.groupby(dsDateCol.dt.year)[valColName].agg("mean")
 
   vals = dsy.values
   alpha = .95
