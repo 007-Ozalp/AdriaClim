@@ -1,13 +1,10 @@
-TODO Ozlem: revise the module names, to have all camel-case (e.g. rename adriaClimIndUtils_aggregates.py to adriaClimIndUtilsAggregates.py).
+TODO Ozlem: revise the module names, to have all camel-case operation to be completed for adriaClimIndUtils_plots.py.
 
 
-TODO Ozlem: fix the functions acGenerate2DSeasonalSummer and acGenerate2DSeasonalWinter in adriaClimIndUtilsAggregates.py. These function should return a file with 33 frames (one per year), the first with the summer mean, the second with the winter mean.
+TODO Ozlem: in the map plots in general: put the colorbars closer to the map and increase the size of the tick labels.
 
 
-TODO Ozlem: remove the function acGenerate1DFixDim in adriaClimIndUtilsAggregates.py. Only acGenerate1DFixDimCSV should remain, saving only in csv, which should be the only format used for time series.
-
-
-TODO Ozlem: geocat plot for mean SST.
+TODO Ozlem: plot of trend of SST: use the linear plot, use more levels, use a sequential colormap.
 
 
 TODO Ozlem: generalization of the structure of the netcdf by means of a specification class, e.g.:
@@ -27,6 +24,12 @@ TODO Ozlem: generalization of the structure of the netcdf by means of a specific
 
      def acGenerate2DAnnualMeanMaps(inputNc, annualMapsNcFile): # inputNc should be an instance of acNcFileSpec
        ...
+  
+     TO BE COMPLETED
+
+TODO Ozlem: wrap all the aggregations and plots in the jupyter notebook.
+
+TODO Ozlem: sort a bit the data files in the git repo (e.g. the area perimeter files, jupyter ..)
 
 
 TODO Ozlem: have a look on how matlplotlib and geocat can be integrated in web frameworks such as: dash, web2py, django.
@@ -38,5 +41,9 @@ TODO Lorenzo: When the class acNcFileSpec is ready, the methods of adriaClimIndU
 TODO Lorenzo: move the SST timeseries plot to adriaClimIndUtilsPlots .
 
 
+TODO Lorenzo: run the whole jupyter notebook for SST to verify
 
+TODO Lorenzo: review the document modifying the specifications of the time series graph.
+
+TODO Lorenzo: think about the indicator heat content, and add its specification section in the document.
 
