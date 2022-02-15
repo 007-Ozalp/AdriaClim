@@ -44,7 +44,7 @@ def acPlotSSTTimeSeries(dailySSTCsv):
 
   f = plt.figure(figsize=[15, 7])
   plt.plot(dtmAnmlMon, anmlMon, color="teal", linewidth=1, label="Monthly anomaly")
-  plt.plot(dtmAnmlYr, anmlYr, marker='o', markerfacecolor="firebrick", markeredgecolor='k', linewidth=0, label="Yearly anomaly")
+  plt.plot(dtmAnmlYr, anmlYr, marker='o', markerfacecolor="firebrick", markeredgecolor='k', linewidth=0, label="Annual anomaly")
   yrii = np.arange(len(dtmAnmlYr))
   trndln = yrii*medslope
   trndln = trndln - np.mean(trndln)
