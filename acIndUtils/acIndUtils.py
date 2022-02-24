@@ -135,7 +135,7 @@ def acGenerateMeanTimeSeries(inputNcSpec, outCsvFile):
     """ Mean sized LAT an LON  1 dimensional NetCDF file over previously clipped data, for the next csv file creation function
     """
     inDs = xr.open_dataset(inputNcSpec.ncFileName) 
-    if inputNcSpec.zVarName is "":
+    if inputNcSpec.zVarName == "":
       fy_1D= inDs.mean(dim=(inputNcSpec.yVarName, inputNcSpec.xVarName), skipna=True)
     else:
       fy_1D= inDs.mean(dim=(inputNcSpec.yVarName, inputNcSpec.xVarName, inputNcSpec.zVarName), skipna=True)
@@ -183,14 +183,14 @@ def acComputeSenSlopeMap(annualMapsNcSpec, outputNcFile):
     output:
       outputNcFile: file where the slope is stored.
     """
-    inputDs = xarray.open_dataset(annualMapsNcFile)
+    inputDs = xr.open_dataset(annualMapsNcSpec.ncFileName)
   
     def _compSenSlope(vals):
       alpha = .95
       medslope, _, _, _ = stats.mstats.theilslopes(vals, alpha=alpha)
       return medslope
   
-    slp = xarray.apply_ufunc(_compSenSlope, inputDs, input_core_dims=[["year"]], dask="allowed", vectorize=True)
+    slp = xr.apply_ufunc(_compSenSlope, inputDs, input_core_dims=[["year"]], dask="allowed", vectorize=True)
     slp.to_netcdf(outputNcFile)
     return slp
 
