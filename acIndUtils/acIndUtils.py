@@ -1,12 +1,10 @@
 import os
 import numpy as np
-from scipy import stats
+from scipy import stats, signal
 import xarray as xr
 import pandas as pd
 import netCDF4
 from shapely import geometry as g
-
-import regionmask
 
 
 class acNcFileSpec:
@@ -120,7 +118,7 @@ def acClipDataOnRegion(dataInputNcSpec, areaPerimeter, dataOutputNcFpath):
       clp = clp3d if hasZCoord else clp3d[0,:]
       varnc[ifrm, :] = clp
     ds.close()
-    print("\n  done!")
+    print("")
 
     
 
@@ -217,13 +215,15 @@ def acComputeAnnualTheilSenFitFromDailyFile(dailyCsvFile):
 
 
 
-def acComputeSenSlopeMap(annualMapsNcSpec, outputNcFile):
+def acComputeSenSlope2DMap(annualMapsNcSpec, outputNcFile, smoothingKernelSide=3):
     """
     computeSenSlopeMap: generates a map with the sen's slope for each pixel, given the series of annual maps in file inputNcFile.
     input:
       annualMapsNcFile: input nc file with annual maps of the variable of interest. The time variable is assumed to be called "year".
     output:
       outputNcFile: file where the slope is stored.
+    other parameters:
+      smoothingKernelSide: ouptut smoothing kernel side (expressed in number of cells)
     """
     inputDs = xr.open_dataset(annualMapsNcSpec.ncFileName)
   
@@ -233,6 +233,18 @@ def acComputeSenSlopeMap(annualMapsNcSpec, outputNcFile):
       return medslope
   
     slp = xr.apply_ufunc(_compSenSlope, inputDs, input_core_dims=[["year"]], dask="allowed", vectorize=True)
+
+    # applying some smoothing by means of a convolution (2D only)
+    vls = slp[annualMapsNcSpec.varName].values
+    msk = (~np.isnan(vls)).astype(int)
+    vls[msk == 0] = 0
+    krnl = np.ones((smoothingKernelSide, smoothingKernelSide))
+    cellCount = signal.convolve2d(msk, krnl, mode="same")
+    cellCount[msk == 0] = 1
+    smoothedVls = signal.convolve2d(vls, krnl, mode="same")/cellCount
+    smoothedVls[msk == 0] = np.nan
+    slp[annualMapsNcSpec.varName].values = smoothedVls
+
+    # saving
     slp.to_netcdf(outputNcFile)
-    return slp
 
