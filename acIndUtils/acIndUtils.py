@@ -3,6 +3,8 @@ import numpy as np
 from scipy import stats
 import xarray as xr
 import pandas as pd
+import netCDF4
+from shapely import geometry as g
 
 import regionmask
 
@@ -36,16 +38,34 @@ def acCloneFileSpec(src, **kwargs):
     return out
 
 
+
+def _get3DMaskOnPolygon(lon, lat, map3D, polygon):
+    # polygon is given in form of [xcoordinates, ycoordinates]
+    # assuming that map3D is (z, y, x)
+    lonflatten = lon.flatten()
+    latflatten = lat.flatten()
+    pts = np.array([lonflatten, latflatten]).transpose()
+  
+    ply = g.Polygon(polygon)
+    ncnt = np.vectorize(lambda p: ply.contains(g.Point(p)), signature='(n)->()')
+    maskFlatten = ncnt(pts)
+    mask = maskFlatten.reshape(lon.shape)
+  
+    nz = map3D.shape[0]
+    mask_ = np.expand_dims(mask, 0)
+    mask3D = mask_[np.zeros([nz]).astype(int), :, :]
+  
+    return mask3D
+
         
 def acClipDataOnRegion(dataInputNcSpec, areaPerimeter, dataOutputNcFpath):
        
-    """ CLIP INPUT OVER INTERESTED AREA.
+    """ CLIP INPUT OVER THE AREA OF INTEREST.
      Input File
      dataInputNcSpec: instance of acNcFileSpec describing the input nc file.
      areaPerimeter: pandas dataset delimiting the area being analysed. In the dataset, the 1st column is longitude, 
      the 2nd column is latitude 
      dataOutputNcFpath: path of the output nc file.
-     TODO: the region must be clipped on the polygon, not on the rectangle
     """
     
     print("CMEMS SST Dimension:",dataInputNcSpec)
@@ -59,27 +79,49 @@ def acClipDataOnRegion(dataInputNcSpec, areaPerimeter, dataOutputNcFpath):
     lat_min = areaPerLat.min()
     lon_max = areaPerLon.max()
     lon_min = areaPerLon.min()
-    
 
     inputNc = xr.open_dataset(dataInputNcSpec.ncFileName)
     nclon = inputNc[dataInputNcSpec.xVarName]
     nclat = inputNc[dataInputNcSpec.yVarName]
     t = inputNc.sel({dataInputNcSpec.yVarName:slice(lat_min,lat_max), dataInputNcSpec.xVarName:slice(lon_min,lon_max)})
     
-    print("Reseized Area:",t)
+    hasZCoord = dataInputNcSpec.zVarName != ""
 
-    print ('saving to ', dataOutputNcFpath)
+    #ensuring that the dimensions are in the correct order
+    if hasZCoord:
+      t = t.transpose(dataInputNcSpec.tVarName, dataInputNcSpec.zVarName, dataInputNcSpec.yVarName, dataInputNcSpec.xVarName)
+    else:
+      t = t.transpose(dataInputNcSpec.tVarName, dataInputNcSpec.yVarName, dataInputNcSpec.xVarName)
+
+    print ('preselecting the mininumn containing rectangle, saving to ', dataOutputNcFpath)
     if os.path.isfile(dataOutputNcFpath):
       os.remove(dataOutputNcFpath)
     t.to_netcdf(path=dataOutputNcFpath)
-    print ('finished saving')
+    t.close()
 
-   #TODO: clip to the polygon
-   #rgn = regionmask.Regions([np.array(areaPerimeter)])
-   #msk = rgn.mask(t0[dataInputNcSpec.varName], method="shapely")
-   #t = xr.where(msk, t0, np.nan)
+    print ('clipping over the polygon and storing frame by frame (may take a while ...)')
+    ds = netCDF4.Dataset(dataOutputNcFpath, "r+")
+    lon = ds.variables[dataInputNcSpec.xVarName][:]
+    lat = ds.variables[dataInputNcSpec.yVarName][:]
+    lonmtx, latmtx = np.meshgrid(lon, lat)
+    nframe = ds.variables[dataInputNcSpec.tVarName].shape[0]
+    varnc = ds.variables[dataInputNcSpec.varName]
+    mask3d = None
+    for ifrm in range(nframe):
+      if ifrm % 100 == 0:
+        percDone = ifrm/nframe*100
+        print(f"  done {percDone:2.0f} %", end="\r")
+      vls = varnc[ifrm, :]
+      vls3d = vls if hasZCoord else np.expand_dims(vls, 0)
+      if mask3d is None:
+        mask3d = _get3DMaskOnPolygon(lonmtx, latmtx, vls3d, areaPerimeter.values)
+      clp3d = vls3d.copy()
+      clp3d[~mask3d] = np.nan
+      clp = clp3d if hasZCoord else clp3d[0,:]
+      varnc[ifrm, :] = clp
+    ds.close()
+    print("\n  done!")
 
-    return t
     
 
 def __acGenerate2DAnnualMeanMaps(inputNcSpec, outputFileName, timeSelector):
